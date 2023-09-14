@@ -28,7 +28,7 @@ obstacle_images = [
 
 # Mensaje de choque
 myfont = pygame.font.SysFont("None", 100)
-render_text = myfont.render("¡YOU LOST!", 1, (100, 0, 0))
+render_text = myfont.render("¡YOU LOST!", 1, (200, 0, 0))
 
 # Reloj para controlar la velocidad
 clock = pygame.time.Clock()
@@ -39,6 +39,9 @@ car_height = 100
 
 # Redimensionar el carro
 car_img = pygame.transform.scale(car_img, (car_width, car_height))
+
+# Crear una fuente para el texto
+font = pygame.font.Font(None, 36)
 
 # Función para dibujar el carro en la pantalla
 def car(x, y):
@@ -77,9 +80,12 @@ def game_loop():
     x = 360
     y = 500
     x_change = 0
+    distance = 0  # Variable para llevar el seguimiento de la distancia recorrida en km
     bumped = False
 
     obs_x, obs_y, obs_speed, obs_type = create_obstacle()
+    obstacle_speed_increase_interval = 1000  # Aumenta la velocidad cada 1000 unidades de distancia
+    speed_increase_amount = 1  # Cantidad de aumento de velocidad
 
     while not bumped:
         for event in pygame.event.get():
@@ -96,6 +102,7 @@ def game_loop():
                     x_change = 0
 
         x += x_change
+        distance += 1  # Incrementar la distancia en 1 km por ciclo de juego
 
         # Limitar la posición del carro dentro del carril
         if x < 110:
@@ -105,6 +112,9 @@ def game_loop():
 
         screen.fill((119, 119, 119))
         background()
+        # Aumentar la velocidad de los obstáculos gradualmente
+        if distance % obstacle_speed_increase_interval == 0:
+            obs_speed += speed_increase_amount
 
         # Mover y dibujar obstáculos
         obs_y += obs_speed
@@ -115,7 +125,10 @@ def game_loop():
         # Verificar colisión con el obstáculo
         if y < obs_y + car_height:
             if x > obs_x and x < obs_x + car_width or x + car_width > obs_x and x + car_width < obs_x + car_width:
-                screen.blit(render_text, (100, 200))
+                screen.blit(render_text, (200, 200))
+                # Mostrar la distancia cuando pierdes
+                text = font.render(f"Distancia recorrida: {distance} km", True, (255, 255, 255))
+                screen.blit(text, (240, 300))
                 pygame.display.update()
                 time.sleep(5)
                 bumped = True
@@ -124,6 +137,12 @@ def game_loop():
         # Verificar si el obstáculo ha pasado al final de la pantalla
         if obs_y > height:
             obs_x, obs_y, obs_speed, obs_type = create_obstacle()
+
+        # Muestra la distancia recorrida en la parte superior izquierda
+        text = font.render(f"Distancia: {distance} km", True, (255, 255, 255))
+        text_rect = text.get_rect()
+        text_rect.topleft = (10, 10)
+        screen.blit(text, text_rect)
 
         pygame.display.update()
         clock.tick(60)
